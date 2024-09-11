@@ -11,8 +11,12 @@
             "id": "675be1a9e6375112",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {}
+              "type": "markdown",
+              "state": {
+                "file": "Untitled.md",
+                "mode": "source",
+                "source": false
+              }
             }
           }
         ]
@@ -81,6 +85,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "Untitled.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -97,6 +102,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "Untitled.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -119,7 +125,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Welcome.md"
+                "file": "Untitled.md"
               }
             }
           }
@@ -140,7 +146,7 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "636b44af0b3a4ee5",
+  "active": "675be1a9e6375112",
   "lastOpenFiles": [
     "Untitled.md",
     "papers",
