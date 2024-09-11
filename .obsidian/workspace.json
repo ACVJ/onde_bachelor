@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Untitled.md",
+                "file": "hejhej.md",
                 "mode": "source",
                 "source": false
               }
@@ -85,7 +85,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Untitled.md",
+                "file": "hejhej.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +102,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Untitled.md",
+                "file": "hejhej.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -125,7 +125,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Untitled.md"
+                "file": "hejhej.md"
               }
             }
           }
@@ -148,9 +148,9 @@
   },
   "active": "675be1a9e6375112",
   "lastOpenFiles": [
-    "hejhej.md",
     "Untitled.md",
-    "papers",
-    "Welcome.md"
+    "hejhej.md",
+    "Welcome.md",
+    "papers"
   ]
 }
