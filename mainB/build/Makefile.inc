@@ -1,0 +1,2 @@
+-include libraries/Midi/build/Makefile.link
+-include libraries/WriteFile/build/Makefile.link
