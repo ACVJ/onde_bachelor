@@ -62,17 +62,13 @@ run_experiment_trial <- function(group_id, condition, trial) {
     # Create new terminal
     terminal_name <- sprintf("BelaTerm_%d_%s_%d", group_id, condition, trial)
     term <- rstudioapi::terminalCreate(terminal_name)
-    Sys.sleep(2)
-
-    #add enter
+    Sys.sleep(4)
     
     # Connect to Bela
     cat("Connecting to Bela...\n")
     rstudioapi::terminalSend(term, "ssh root@192.168.6.2\r")
     Sys.sleep(3)
 
-    #add enter
-    
     cat("Checking Bela data directory...\n")
     rstudioapi::terminalSend(term, "mkdir -p /root/Bela/projects/mainB/data\r")
     Sys.sleep(1)
@@ -212,30 +208,26 @@ run_full_experiment <- function(group_id) {
     # Run experimental trials
     conditions <- c("23-1",  "1-23", "Simultaneous", "123", "231", "312")  # Add more conditions as needed. evt. randomize 
     for(condition in conditions) {
+        condition_window(condition)
+
         display_condition_instructions(condition)
 
         run_experiment_trial(group_id, condition, 0)
 
         # Display test instructions
-        display_test_instructions()
-        # Ask if ready for main experiment
-        response <- readline("\nReady to start main experiment? (y/n): ")
-        if(tolower(response) != "y") {
-            cat("Experiment cancelled.\n")
-        return()
-    }
-
+        experiment_instructions(condition)
+    
         for(trial in 1:1) {  # Adjust number of trials as needed
             run_experiment_trial(group_id, condition, trial)
         }
-        display_condition_complete()
+        condition_complete()
     }
     
     # Process and save all data
     process_experiment_data(group_id)
     
     # Complete
-    display_experiment_complete()
+    experiment_complete()
 }
 
 #Running the experiment

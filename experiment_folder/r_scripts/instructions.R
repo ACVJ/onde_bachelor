@@ -60,40 +60,7 @@ Estimated time to complete: 20min. \n",
 
 
 
-
-
-
-
-
-display_welcome <- function() {
-    cat("\nWelcome to the Rhythm Synchronization Experiment!\n")
-    cat("-----------------------------------------------\n")
-    cat("******************Instructions******************:\n")
-    cat("- Listen to 4 metronome beats\n")
-    cat("- Continue tapping at this tempo\n\n")
-    cat("- Each participant uses their assigned key:\n")
-    cat(" 
-                - Participants to the left: Blue dot. \n
-                        Role-name: 'Blue' \n\n
-                - Participant in the middle: Black dot:\n
-                        Role-name: 'Black' \n\n
-                - Participant to the right: Pink dot  \n
-                        Role-name: 'Pink' \n\n")
-
-    cat("- When your taps no longer produce sounds, stop tapping and move on to the next trial\n")
-    cat("The experiment has 3 conditions. \n 
-        At the beginning of each experiment condition, there will be a practice trial.\n\n
-        After each trial, there will be a scale: \n
-        Each participant is asked to rate their experience of xyz \n 
-        While rating the experience, the other participants must *****TURN AWAY FROM THE SCREEN*****\n\n")
-    cat("Estimated time to complete: 20min. \n")
-    readline("Press Enter if the above is understood")
-}
-
-display_condition_instructions <- function(condition) {
-    cat("\n\n", "Instructions", "\n")
-    cat("------------------------\n")
-    
+condition_window <- function(condition) {
     instructions <- switch(condition,
         "123" = "Tap in sequence: First Blue, then Black, then Pink",
         "231" = "Tap in sequence: First Black, then Pink, then Blue",
@@ -103,29 +70,40 @@ display_condition_instructions <- function(condition) {
         "1-23" = "Blue taps alone, then Black and Pink tap together",
         "Unknown condition"
     )
-    
-    cat(instructions, "\n")
-    cat("\nRemember:\n")
-    cat("- Listen to metronome\n")
-    cat("- Continue at same tempo\n")
-    cat("- 24 tones total\n\n")
-
-    readline("Press Enter to start...")
+    create_window("Instructions for upcoming experimental condition", 
+    paste(instructions, "\nRemember:\n
+    Listen to metronome speed\n
+    Continue at the same tempo\n
+    You'll tap for 24 tones total\n\n"),
+    "Begin practice")
 }
 
-display_test_instructions <- function() {
-    cat("\nBeginning Test Trials\n")
-    cat("Now starting the recorded trials. Same procedure as practice.\n")
-    readline("Press Enter to continue...")
+experiment_instructions <- function(condition) {
+    instructions <- switch(condition,
+        "123" = "Tap in sequence: First Blue, then Black, then Pink",
+        "231" = "Tap in sequence: First Black, then Pink, then Blue",
+        "312" = "Tap in sequence: First Pink, then Blue, then Black",
+        "Simultaneous" = "All participants tap together at the same time - one tap together makes one tone",
+        "23-1" = "Black and Pink tap together, then Blue taps alone",  
+        "1-23" = "Blue taps alone, then Black and Pink tap together",
+        "Unknown condition"
+    )
+    create_window("Experiment Instructions", 
+    paste("\nBeginning Test Trials\n
+Now starting the recorded trials. Same procedure as practice.\n
+Remember, the order is as follows:", instructions, "
+This order will remain until further instructions"),
+    "Begin experiment trials")
 }
 
-display_condition_complete <- function() {
-    cat("\nCondition Complete\n")
-    readline("Press Enter when ready to continue...")
+condition_complete <- function() {
+    create_window("Condition complete", 
+    "Condition Complete",
+    "Proceed to next condition")
 }
 
-display_experiment_complete <- function() {
-    cat("\nExperiment Complete\n")
-    cat("Thank you for participating!\n")
-    readline("Press Enter to finish...")
+experiment_complete <- function() {
+    create_window("Experiment Complete", 
+    "Thank you for participating!",
+    "Exit experiment")
 }
