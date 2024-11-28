@@ -67,7 +67,8 @@ run_experiment_trial <- function(group_id, condition, trial) {
     # Connect to Bela
     cat("Connecting to Bela...\n")
     rstudioapi::terminalSend(term, "ssh root@192.168.6.2\r")
-    Sys.sleep(3)
+    Sys.sleep(5)
+    rstudioapi::terminalSend(term, "ssh root@192.168.6.2\r")
 
     cat("Checking Bela data directory...\n")
     rstudioapi::terminalSend(term, "mkdir -p /root/Bela/projects/mainB/data\r")
@@ -209,13 +210,13 @@ run_full_experiment <- function(group_id) {
     conditions <- c("23-1",  "1-23", "Simultaneous", "123", "231", "312")  # Add more conditions as needed. evt. randomize 
     for(condition in conditions) {
         condition_window(condition)
-
-        display_condition_instructions(condition)
+        #readline("Enter group number: ")
 
         run_experiment_trial(group_id, condition, 0)
 
         # Display test instructions
         experiment_instructions(condition)
+        #readline("Enter group number: ")
     
         for(trial in 1:1) {  # Adjust number of trials as needed
             run_experiment_trial(group_id, condition, trial)

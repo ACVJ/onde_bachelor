@@ -34,14 +34,8 @@ collect_ratings <- function(group_id, condition, trial) {
     ratings <- data.frame()
     
     for(participant in c("Blue", "Black", "Pink")) {
-        cat(sprintf("\nParticipant %s, please provide your rating\n", participant))
-        cat("A new window will open. Click in it to rate your experience of the task.\n")
-        cat("X-axis: \n
-        No control - Full control \n
-        (0 = Can't control the task, 1 = Full control of the task)\n\n")
-        cat("Y-axis: \n
-        Independent control - Shared control \n 
-        (0 = 'Control is independent of the others', 1 = 'Control shared with the others)\n")
+        rating_instructions_window(participant)
+       
          
         rating <- show_2d_rating(participant)
         

@@ -59,7 +59,6 @@ Estimated time to complete: 20min. \n",
 # Start the application with the first window
 
 
-
 condition_window <- function(condition) {
     instructions <- switch(condition,
         "123" = "Tap in sequence: First Blue, then Black, then Pink",
@@ -106,4 +105,17 @@ experiment_complete <- function() {
     create_window("Experiment Complete", 
     "Thank you for participating!",
     "Exit experiment")
+}
+
+rating_instructions_window <- function(participant) {
+    create_window("Rating Instructions", 
+    paste("\nParticipant", participant, 
+", please provide your rating. \n A new window will open. Click in it to rate your experience of the task.\n
+X-axis: \n
+No control - Full control \n
+0 = Can't control the task, 1 = Full control of the task)\n\n
+Y-axis: \n
+Independent control - Shared control \n 
+0 = 'Control is independent of the others', 1 = 'Control shared with the others)\n"), 
+"Proceed to rating")
 }
