@@ -242,7 +242,7 @@ void render(BelaContext *context, void *userData)
     float value = 0;
 
     if (playingCueTone) {
-        if (cueTonePlayCount < 3) { // Play 4 tones
+        if (cueTonePlayCount < 4) { // Play 4 tones
             if (cueToneCounter < audioSampleRate / 2) {
                 gFrequency = 440.0;
                 gAmplitude = 0.5;  // Play tone
@@ -255,24 +255,16 @@ void render(BelaContext *context, void *userData)
                 cueToneCounter = 0;
                 cueTonePlayCount++;
             }
+            
+            if (cueTonePlayCount == 3 && cueToneCounter >= audioSampleRate / 2) {
+    			// Start preparing for new notes during the last silence period
+    			playingCueTone = false; // End cue tone early
+			}
 
             value = sin(gPhase) * gAmplitude;
             gPhase += 2.0 * M_PI * gFrequency / audioSampleRate;
             if (gPhase > 2.0 * M_PI) gPhase -= 2.0 * M_PI;
             
-        if (cueTonePlayCount == 3) { // Play 4 tones
-            if (cueToneCounter < audioSampleRate / 2) {
-                gFrequency = 440.0;
-                gAmplitude = 0.5;  // Play tone
-            }
-            
-            if (cueToneCounter >= audioSampleRate / 2) { // Cycle complete
-                cueToneCounter = 0;
-                cueTonePlayCount++;
-            }
-            
-        }
-
         } else {
             // Disable cue tone mode immediately after the last tone
             playingCueTone = false;
@@ -305,4 +297,4 @@ void cleanup(BelaContext *context, void *userData)
 {
     gDataFile.log(logs.data(), logIdx); // Ensure any remaining logs are written
     rt_printf("Data file closed\n");
-}
+} 
