@@ -31,14 +31,19 @@ get_trial_data <- function(term, group_id, condition, trial) {
     local_file <- sprintf("data/trial_%d_%s_%d.csv",
                          group_id, condition, trial)
     
-    # Try to copy the file
+    # Check if the remote file exists and capture output
+    check_command <- sprintf("ssh root@192.168.6.2 'test -e %s && echo \"File exists\" || echo \"File does not exist\"'", remote_file)
+    cat("Checking if remote file exists...\n")
+    file_exists_output <- system(check_command, intern = TRUE)
+    cat(file_exists_output, "\n")  # Print the output of the existence check
+
+    # Try to copy the file with verbose output
     tryCatch({
         cat("Copying data from Bela...\n")
-        scp_command <- sprintf('scp root@192.168.6.2:%s %s\r',
-                              remote_file, local_file)
+        scp_command <- sprintf('scp root@192.168.6.2:%s %s', remote_file, local_file)
         cat("Executing command:", scp_command, "\n")
-        rstudioapi::terminalSend(term, scp_command)
-        Sys.sleep(5)  # Increased sleep time
+        system(scp_command)  # Use system to execute the command
+        Sys.sleep(10)  # Increased sleep time
     }, error = function(e) {
         cat("Error during file transfer:", e$message, "\n")
         return(FALSE)
@@ -100,7 +105,7 @@ run_experiment_trial <- function(group_id, condition, trial) {
     # NEW: Exit Bela before retrieving data
     cat("Exiting Bela...\n")
     rstudioapi::terminalSend(term, "exit\r")
-    Sys.sleep(2)
+    Sys.sleep(3)
     
     # Get data using the get_trial_data function
     cat("Retrieving data...\n")
