@@ -20,7 +20,7 @@ cleanup_terminals <- function() {
 
 get_trial_data <- function(term, group_id, condition, trial) {
     # Debug output at start
-    cat("\nStarting get_trial_data with terminal_id:", term, "\n")
+    #cat("\nStarting get_trial_data with terminal_id:", term, "\n")
     
     # Create local data directory if it doesn't exist
     dir.create("data", showWarnings = FALSE)
@@ -32,18 +32,18 @@ get_trial_data <- function(term, group_id, condition, trial) {
                          group_id, condition, trial)
     
     # Check if the remote file exists and capture output
-    check_command <- sprintf("ssh root@192.168.6.2 'test -e %s && echo \"File exists\" || echo \"File does not exist\"'", remote_file)
-    cat("Checking if remote file exists...\n")
-    file_exists_output <- system(check_command, intern = TRUE)
-    cat(file_exists_output, "\n")  # Print the output of the existence check
+    #check_command <- sprintf("ssh root@192.168.6.2 'test -e %s && echo \"File exists\" || echo \"File does not exist\"'", remote_file)
+    #cat("Checking if remote file exists...\n")
+    #file_exists_output <- system(check_command, intern = TRUE)
+    #cat(file_exists_output, "\n")  # Print the output of the existence check
 
-    # Try to copy the file with verbose output
+    # Try to copy the file without verbose - incl. "-v" = find file  
     tryCatch({
-        cat("Copying data from Bela...\n")
+        #cat("Copying data from Bela...\n") inset for debugging
         scp_command <- sprintf('scp root@192.168.6.2:%s %s', remote_file, local_file)
-        cat("Executing command:", scp_command, "\n")
+        #cat("Executing command:", scp_command, "\n") inset for debugging
         system(scp_command)  # Use system to execute the command
-        Sys.sleep(10)  # Increased sleep time
+        Sys.sleep(7)  # Increased sleep time
     }, error = function(e) {
         cat("Error during file transfer:", e$message, "\n")
         return(FALSE)
@@ -51,10 +51,10 @@ get_trial_data <- function(term, group_id, condition, trial) {
     
     # Verify file was copied
     if(file.exists(local_file)) {
-        cat(sprintf("Data saved to: %s\n", local_file))
+        #cat(sprintf("Data saved to: %s\n", local_file)) inset for debugging
         return(TRUE)
     } else {
-        cat("Warning: Data file not found at:", local_file, "\n")
+        cat("Warning: Data file not found at:", local_file, "\n") 
         return(FALSE)
     }
 }
@@ -67,21 +67,21 @@ run_experiment_trial <- function(group_id, condition, trial) {
     # Create new terminal
     terminal_name <- sprintf("BelaTerm_%d_%s_%d", group_id, condition, trial)
     term <- rstudioapi::terminalCreate(terminal_name)
-    Sys.sleep(4)
+    Sys.sleep(3)
     
     # Connect to Bela
-    cat("Connecting to Bela...\n")
+    #cat("Connecting to Bela...\n") inset for debugging
     rstudioapi::terminalSend(term, "ssh root@192.168.6.2\r")
     Sys.sleep(5)
     rstudioapi::terminalSend(term, "ssh root@192.168.6.2\r")
 
-    cat("Checking Bela data directory...\n")
+    #cat("Checking Bela data directory...\n") inset for debugging
     rstudioapi::terminalSend(term, "mkdir -p /root/Bela/projects/mainB/data\r")
     Sys.sleep(1)
     
-    cat("Checking Bela directory contents before trial...\n")
-    rstudioapi::terminalSend(term, "ls -l /root/Bela/projects/mainB/data/\r")
-    Sys.sleep(1)
+    #cat("Checking Bela directory contents before trial...\n") inset for debugging
+    #rstudioapi::terminalSend(term, "ls -l /root/Bela/projects/mainB/data/\r") inset for debugging
+    #Sys.sleep(1)
     
     # Set parameters
     cat("Setting parameters...\n")
@@ -91,7 +91,7 @@ run_experiment_trial <- function(group_id, condition, trial) {
     Sys.sleep(1)
     
     # Run project
-    cat(sprintf("Running %s ...\n", condition))
+    #cat(sprintf("Running %s ...\n", condition)) inset for debugging
     rstudioapi::terminalSend(term, "cd /root/Bela && ./scripts/run_project.sh mainB\r")
     
     cat("Trial is running. Press Enter when the trial is complete...\n")
@@ -102,19 +102,19 @@ run_experiment_trial <- function(group_id, condition, trial) {
     rstudioapi::terminalSend(term, "\x03")  # Send Ctrl+C
     Sys.sleep(2)
     
-    # NEW: Exit Bela before retrieving data
-    cat("Exiting Bela...\n")
+    # Exit Bela before retrieving data
+    #cat("Exiting Bela...\n") inset for debugging 
     rstudioapi::terminalSend(term, "exit\r")
     Sys.sleep(3)
     
     # Get data using the get_trial_data function
-    cat("Retrieving data...\n")
+    #cat("Retrieving data...\n") inset for debugging
     if(!get_trial_data(term, group_id, condition, trial)) {
         cat("Warning: Failed to retrieve data for trial\n")
     }
     
     # Collect ratings if this is not a practice trial (condition != 0)
-    cat("\nCollecting ratings for this trial...\n")
+    #cat("\nCollecting ratings for this trial...\n") inset for debugging
     ratings <- collect_ratings(group_id, condition, trial)
     if (trial != 0 ) {   #lave om når practice vbliver genintroducert
          save_ratings(ratings)
@@ -134,9 +134,9 @@ process_experiment_data <- function(group_id) {
     
     cat("Found", length(files), "files to process\n")
     
-    # Debugging: Print all found files
-    cat("All found files:\n")
-    print(files)
+    # Debugging: Print all found files - doesn't work
+    #cat("All found files:\n")
+    #print(files)
     
     # Filter files based on group_id
     selected_files <- files[sapply(files, function(file) {
@@ -187,6 +187,7 @@ process_experiment_data <- function(group_id) {
     }
     
     if(nrow(all_data) > 0) {
+
         # Save combined data
         combined_file <- sprintf("data/group_%d_all_data.csv", group_id)
         write.csv(all_data, combined_file, row.names = FALSE)
@@ -199,6 +200,10 @@ process_experiment_data <- function(group_id) {
     return(all_data)
 }
 
+##################################### EXPERIMENT RUN #####################################
+
+
+########### experiment function 
 
 run_full_experiment <- function(group_id) {
     #ask for group number
@@ -223,8 +228,9 @@ run_full_experiment <- function(group_id) {
         experiment_instructions(condition)
         #readline("Enter group number: ")
     
-        for(trial in 1:1) {  # Adjust number of trials as needed
+        for(trial in 1:3) {  # Adjust number of trials as needed
             run_experiment_trial(group_id, condition, trial)
+            trial_complete()
         }
         condition_complete()
     }
@@ -236,7 +242,8 @@ run_full_experiment <- function(group_id) {
     experiment_complete()
 }
 
-#Running the experiment
+###################################################### Running the experiment ######################################################
+
 tryCatch({
     run_full_experiment()
 }, error = function(e) {

@@ -188,7 +188,7 @@ void render(BelaContext *context, void *userData)
                             gActiveNotes[gActiveNoteCount] = noteNumber;
                             gActiveNoteCount++;
                             gFrequency = freq[tone_nr];
-                            gAmplitude = 0.5;
+                            gAmplitude = 1;
 
                             // Reset activeParticipants for the next synchronization event
                             activeParticipants.clear();
@@ -243,29 +243,37 @@ void render(BelaContext *context, void *userData)
 
     if (playingCueTone) {
         if (cueTonePlayCount < 4) { // Play 4 tones
-            if (cueToneCounter < audioSampleRate / 2) {
-                gFrequency = 440.0;
-                gAmplitude = 0.5;  // Play tone
+            if (cueToneCounter < audioSampleRate / 3) {
+            	//if (cueToneCounter == 1) { En mulighed for timing tjek
+            		//float timestamp = frameCounter / audioSampleRate;
+            		//#logs[0] = timestamp; // Timestamp
+    				//logs[1] = 0.0; // Participant number as float
+    				//logIdx += 2;
+            	//}
+            	gFrequency = 440.0;
+                gAmplitude = 1;  // Play tone
             } else {
                 gAmplitude = 0.0;  // Silence
             }
             cueToneCounter++;
             
-            if (cueToneCounter >= audioSampleRate) { // Cycle complete
-                cueToneCounter = 0;
-                cueTonePlayCount++;
-            }
-            
-            if (cueTonePlayCount == 3 && cueToneCounter >= audioSampleRate / 2) {
+            if (cueTonePlayCount == 3 && cueToneCounter >= audioSampleRate / 3) {
     			// Start preparing for new notes during the last silence period
     			playingCueTone = false; // End cue tone early
 			}
+            
+            if (cueToneCounter >= audioSampleRate / 1.5) { // Cycle complete
+                cueToneCounter = 0;
+                cueTonePlayCount++;
+            }
 
             value = sin(gPhase) * gAmplitude;
             gPhase += 2.0 * M_PI * gFrequency / audioSampleRate;
             if (gPhase > 2.0 * M_PI) gPhase -= 2.0 * M_PI;
             
-        } else {
+        } 
+
+		else {
             // Disable cue tone mode immediately after the last tone
             playingCueTone = false;
             cueToneCounter = 0;

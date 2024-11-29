@@ -9,7 +9,7 @@ show_2d_rating <- function(participant) {
     # Create the plot
     plot(0, 0, type = "n", 
          xlim = c(0, 1), ylim = c(0, 1),
-         xlab = "No control - Full control", ylab = "Independent control - Shared control",
+         ylab = "No control - Full control", xlab = "Independent control - Shared control",
          main = sprintf("Participant %s: Click to rate your experience", participant))
     
     # Add grid
@@ -35,6 +35,10 @@ collect_ratings <- function(group_id, condition, trial) {
     
     for(participant in c("Blue", "Black", "Pink")) {
         rating_instructions_window(participant)
+
+        display_image_1()
+        #display_image_2()
+        #display_image_3()
        
          
         rating <- show_2d_rating(participant)
@@ -44,13 +48,13 @@ collect_ratings <- function(group_id, condition, trial) {
             condition = condition,
             trial = trial,
             participant = participant,
-            control = rating$x,
-            shared = rating$y,
+            shared = rating$x,
+            control = rating$y,
             timestamp = Sys.time()
         ))
         
-        cat(sprintf("Rating recorded: Control = %.2f, Synchronization = %.2f\n", 
-            rating$x, rating$y))
+        #cat(sprintf("Rating recorded: Control = %.2f, Synchronization = %.2f\n", 
+        #    rating$x, rating$y))
     }
     
     return(ratings)
