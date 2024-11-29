@@ -4,7 +4,7 @@ library(rstudioapi)
 test_ssh_connection <- function() {
     # Introduce a loop to simulate multiple attempts
     for (i in 1:10) {
-        Sys.sleep(runif(1, 1, 3))  # Random delay between 1 to 3 seconds
+        Sys.sleep(runif(1, 3, 5))  # Random delay between 1 to 5 seconds
         
         # Create a new terminal for each attempt
         terminal_name <- sprintf("TestBelaTerm_%d", i)
@@ -34,4 +34,5 @@ test_ssh_connection <- function() {
 }
 
 # Run the test
+
 test_ssh_connection()
