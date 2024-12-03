@@ -217,7 +217,7 @@ run_full_experiment <- function(group_id) {
   #  run_experiment_trial(group_id, "Practice", 0)
     
     # Run experimental trials
-    conditions <- c("23-1", "123",  "1-23", "231", "Simultaneous", "312")  # Add more conditions as needed. evt. randomize 
+    conditions <- c( "23-1")  # Add more conditions as needed. evt. randomize 
     for(condition in conditions) {
         condition_window(condition)
         #readline("Enter group number: ")

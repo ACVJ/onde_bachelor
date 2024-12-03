@@ -119,7 +119,7 @@ experiment_complete <- function() {
 rating_instructions_window <- function(participant) {
     create_window("Rating Instructions", 
     paste("\nParticipant", participant, 
-", please provide your rating. OTHER PARTICIPANTS, PLEASE TURN AWAY FROM THE SCREEN \n A new window will open. Click in it to rate your experience of the task.\n
+", please provide your rating. OTHER PARTICIPANTS, PLEASE TURN AWAY FROM THE SCREEN \n A new window will open. Click in it to rate your experience of the task. How was your experience of control over the sounds generated.\n
 X-axis: \n
 Independent control - Shared control \n 
 0 = Control is independent of the others', 1 = 'Control shared with the others\n
