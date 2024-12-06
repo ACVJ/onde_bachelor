@@ -1,0 +1,12 @@
+---
+title: "Data cleaning"
+author: "Anne Christine Vig Jensen"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+pacman::p_load("tclrk")
+install.packages('BiocManager')
+```
+#
