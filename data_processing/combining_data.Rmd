@@ -5,8 +5,42 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
+In this markdown, we load in our experiment data, and combine the files into 1 dataset 
+
 ```{r setup, include=FALSE}
-pacman::p_load("tclrk")
-install.packages('BiocManager')
+knitr::opts_chunk$set(echo = TRUE) #code + output is displayed 
+knitr::opts_knit$set(root.dir = "~/Desktop/bachelor/onde_bachelor/experiment_folder/data") # set working directory 
 ```
-#
+
+Read packages 
+```{r}
+pacman::p_load(readbulk, tidyverse) # to load files 
+```
+
+Read file 
+```{r}
+file <- read.csv("trial_1_23-1_0.csv", header = FALSE )
+```
+
+Add headers 
+```{r}
+colnames(file) <- c("tap_sec", "group_member")
+```
+
+
+Filter 1st and last line 
+```{r}
+file_filtered <- file %>% 
+   slice(-1, -n())
+
+file_filtered
+```
+
+
+pseudocode workflow: 
+
+1. open single file 
+2. insert headers
+3. combine trial_ files
+4. add ratings 
+5. type explanation for columns 
