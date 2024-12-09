@@ -1,4 +1,4 @@
-"tap_sec","participant","condition","group_number","trial"
+"tap_sec","participant","condition","group_id","trial"
 "3.682177",3,"23-1",1,0
 "3.764535",1,"23-1",1,0
 "4.029025",2,"23-1",1,0

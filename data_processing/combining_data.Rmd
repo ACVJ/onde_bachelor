@@ -83,7 +83,7 @@ process_trial_file <- function(file_path) {
   file_filtered_1 <- file_filtered %>%
     mutate(
       condition = condition,
-      group_number = group_number,
+      group_id = group_number,
       trial = trial
     )
   
@@ -110,7 +110,7 @@ if (!dir.exists(output_dir)) {
   dir.create(output_dir, recursive = TRUE)  # Create the folder if it doesn't exist
 } 
 
-# Save the combined data into the new folder
+# Save the combined data
 write.csv(all_data_no_ratings, file = file.path(output_dir, "processed_data_no_ratings.csv"), row.names = FALSE)
 ```
 
@@ -130,6 +130,7 @@ process_group_file <- function(file_path) {
       TRUE ~ NA  # Handle unexpected values with NA
     )) %>% 
     mutate(condition = as.character(condition)) #for now, making the condition column of type character
+
   return(file)
 }
 
@@ -146,22 +147,23 @@ processed_group_files <- group_file_list %>%
     NULL  # Skip file on error
   }))
  
-# Save the combined data into the new folder
+# Save the combined data
 write.csv(processed_group_files, file = file.path(output_dir, "processed_data_ratings.csv"), row.names = FALSE)
 ```
-
 
 ```{r}
 #temporarily setting wd to find combined files
 setwd("~/Desktop/bachelor/onde_bachelor/data_processing/")
 
-nr <- read.csv("processed_data_no_ratings.csv")
-r  <- read.csv("processed_data_ratings.csv")
+no_ratings_df <- read.csv("processed_data_no_ratings.csv")
+ratings_df  <- read.csv("processed_data_ratings.csv") 
 ```
 
 ```{r}
+#combining the no ratings df and the ratings df 
+combined_data <- ratings_df %>% 
+  left_join(no_ratings_df, by = join_by(group_id, condition, trial, participant))
 
+# Save the combined data
+write.csv(combined_data, file = file.path(output_dir, "ratings_trials_combined.csv"), row.names = FALSE)
 ```
-
-
-5. type explanation for columns 
