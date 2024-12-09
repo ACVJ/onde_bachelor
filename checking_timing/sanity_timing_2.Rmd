@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "sanity checkz"
 author: "Carl Emil"
 date: "2024-12-09"
 output: html_document
@@ -9,56 +9,17 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r cars}
-pacman::p_load(tuneR)
-pacman::p_load(seewave)
-
+```{r packages}
+pacman::p_load(tuneR, seewave, tidyverse)
 ```
 
-```{r}
-
-# Load audio file
+```{r metronome_timing}
+# Load audio file with metronome beeps 
 sound <- readWave("metronome_timing_test.wav")
 
-
-# Define start and end time (in seconds)
-start_time <- 0  # Start time in seconds
-end_time <- 10   # End time in seconds
-
-# Convert start and end times to sample indices
-start_sample <- start_time * sound@samp.rate
-end_sample <- end_time * sound@samp.rate
-
-# Crop the audio
-cropped_sound <- sound[start_sample:end_sample]
-
-
-```
-
-```{r}
-# Onset detection (manual tuning required)
-onset_times <- timer(cropped_sound, threshold = 93, dmin = 0.00000001)  # Adjust dmin to a more reasonable value
-
-# Calculate IOIs
-iois <- diff(onset_times$s.start)
-
-print(onset_times)
-print(iois)
-```
-
-```{r}
-?timer
-```
-
-```{r}
-library(tuneR)
-
-# Load audio file
-sound <- readWave("metronome_timing_test.wav")
-
-# Define start and end time (in seconds)
+# Define start and end time (in seconds) - grabbing midsection of audiofile (remove very end and beginning)
 start_time <- 0.3  # Start time in seconds
-end_time <- 40   # End time in seconds
+end_time <- 45   # End time in seconds
 
 # Convert start and end times to sample indices
 start_sample <- start_time * sound@samp.rate
@@ -70,10 +31,10 @@ cropped_sound <- sound[start_sample:end_sample]
 sound <- cropped_sound
 
 # Normalize the sound to get the amplitude range
-max_amplitude <- max(abs(sound@left))  # Assuming mono, if stereo handle both channels
+max_amplitude <- max(abs(sound@left))  # Assuming mono, if stereo handle both channels - 
 threshold <- 0.8 * max_amplitude  # 80% of max amplitude
 
-# Set a minimum duration for the "cooldown" (e.g., 0.2 seconds)
+# Set a minimum duration for the "cooldown" (e.g., 0.2 seconds) - to ensure detection of each tone only once 
 cooldown_duration <- 0.5  # seconds
 
 # Convert cooldown duration to samples
@@ -102,6 +63,10 @@ while (current_sample <= length(sound@left)) {
   # Move to the next sample
   current_sample <- current_sample + 1
 }
+```
+
+```{r}
+#onsets is a vector of onset times of the metronome tones
 
 # Calculate IOIs
 iois <- diff(onsets)
@@ -114,27 +79,8 @@ sd(iois)
 ```
 
 
-```{r}
 
-# Load audio file
-sound <- readWave("tap_timing_test.wav")
-
-
-# Define start and end time (in seconds)
-#start_time <- 0  # Start time in seconds
-#end_time <- 10   # End time in seconds
-
-# Convert start and end times to sample indices
-#start_sample <- start_time * sound@samp.rate
-#end_sample <- end_time * sound@samp.rate
-
-# Crop the audio
-#cropped_sound <- sound[start_sample:end_sample]
-
-
-```
-
-```{r}
+```{r tap timing test}
 # Load audio file
 sound <- readWave("tap_timing_test.wav")
 
@@ -153,7 +99,7 @@ sound <- cropped_sound
 
 # Normalize the sound to get the amplitude range
 max_amplitude <- max(abs(sound@left))  # Assuming mono, if stereo handle both channels
-threshold <- 0.55 * max_amplitude  # 80% of max amplitude
+threshold <- 0.55 * max_amplitude  # 55% of max amplitude
 
 # Set a minimum duration for the "cooldown" (e.g., 0.2 seconds)
 cooldown_duration <- 0.5  # seconds
@@ -195,9 +141,7 @@ mean(iois)
 sd(iois)
 ```
 
-```{r}
-library(tidyverse)
-
+```{r importing IOIs from bela}
 # Load the data
 bela_data <- read_csv("processed_data_group.csv")
 
@@ -208,10 +152,10 @@ bela_data <- bela_data %>%
 # Group by trial and calculate IOI (inter-onset interval)
 bela_data <- bela_data %>% 
   group_by(trial) %>% 
-  mutate(ioi = tap_sec - lag(tap_sec))  # Calculate IOI as the difference from the previous tap
+  mutate(iti = tap_sec - lag(tap_sec))  # Calculate IOI as the difference from the previous tap
 
 
-wav_iois[32:56]
+#wav_iois[32:56]
 
 
 selected_iois <- wav_iois[32:55]
@@ -224,11 +168,11 @@ merged_data <- bela_data %>%
   mutate(wave_iois = selected_iois)
 
 
-timing_difference = merged_data$ioi-merged_data$wave_iois
+timing_difference = merged_data$iti-merged_data$wave_iois
 
 
-merged_data <- bela_data %>%
-  mutate(diff = timing_difference)
+merged_data <- merged_data %>%
+  mutate(diff_iti_ioi = timing_difference)
 
 
 mean(timing_difference[2:length(timing_difference)])
