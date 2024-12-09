@@ -12,24 +12,17 @@ knitr::opts_chunk$set(echo = TRUE) #code + output is displayed
 knitr::opts_knit$set(root.dir = "~/Desktop/bachelor/onde_bachelor/experiment_folder/data") # set working directory 
 ```
 
-Read packages 
-```{r}
-pacman::p_load(readbulk, tidyverse) # to load files 
-```
+```{r Read packages }
+#read packages
+pacman::p_load(readbulk, tidyverse) 
 
-Read file 
-```{r}
+#Read file 
 file <- read.csv("trial_1_23-1_0.csv", header = FALSE )
-```
 
-Add headers 
-```{r}
+#Add headers 
 colnames(file) <- c("tap_sec", "group_member")
-```
 
-
-Filter 1st and last line 
-```{r}
+#Filter 1st and last row 
 file_filtered <- file %>% 
    slice(-1, -n())
 
