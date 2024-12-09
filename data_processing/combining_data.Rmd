@@ -10,30 +10,154 @@ In this markdown, we load in our experiment data, and combine the files into 1 d
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE) #code + output is displayed 
 knitr::opts_knit$set(root.dir = "~/Desktop/bachelor/onde_bachelor/experiment_folder/data") # set working directory 
+
+# #read packages
+pacman::p_load(readbulk, tidyverse)
 ```
 
-```{r Read packages }
-#read packages
-pacman::p_load(readbulk, tidyverse) 
+```{r make dataset}
+############################# Single File Workflow #############################
 
-#Read file 
-file <- read.csv("trial_1_23-1_0.csv", header = FALSE )
+# #read packages
+# pacman::p_load(readbulk, tidyverse)
+# 
+# #Read file
+# file <- read.csv("trial_1_23-1_0.csv", header = FALSE )
+# 
+# #Add headers
+# colnames(file) <- c("tap_sec", "group_member")
+# 
+# #Filter 1st and last row
+# file_filtered <- file %>%
+#    slice(-1, -n())
+# 
+# #Add column specifying condition
+# file_filtered$condition <- "subgroup_loner"
+# 
+# #Add column specifying group number
+# file_filtered$group_number <- 1
+# 
+# #Add column specifying trial
+# file_filtered$trial <- 0
+```
 
-#Add headers 
-colnames(file) <- c("tap_sec", "group_member")
+```{r}
+# Define a function to process a single file
+process_file <- function(file_path) {
+  # Check if the file is empty
+  if (file.info(file_path)$size == 0) {
+    message("Skipping empty file: ", file_path)
+    return(NULL) # Skip processing this file
+  }
+  
+  # Extract the filename (without directory and extension)
+  file_name <- basename(file_path) %>% str_remove(".csv")
+  
+  # Extract information from the filename
+  parts <- str_split(file_name, "_")[[1]]
+  group_number <- as.numeric(parts[2])
+  condition <- case_when(
+    parts[3] == "123" ~ "seq_a",
+    parts[3] == "231" ~ "seq_b",
+    parts[3] == "312" ~ "seq_c",
+    parts[3] == "23-1" ~ "subgroup_loner",
+    parts[3] == "1-23" ~ "loner_subgroup",
+    parts[3] == "Simultaneous" ~ "simultaneous",
+    TRUE ~ "unknown"  # Add a default case if new conditions are encountered
+  )
+  trial <- as.numeric(parts[4])
+  
+  # Read the file
+  file <- read.csv(file_path, header = FALSE)
+  
+  # Add headers
+  colnames(file) <- c("tap_sec", "group_member")
+  
+  # Filter out the first and last rows
+  file_filtered <- file %>%
+    slice(-1, -n())
+  
+  # Add additional columns
+  file_filtered_1 <- file_filtered %>%
+    mutate(
+      condition = condition,
+      group_number = group_number,
+      trial = trial
+    )
+  
+  return(file_filtered_1)
+}
 
-#Filter 1st and last row 
-file_filtered <- file %>% 
-   slice(-1, -n())
+# Directory containing your files
+data_dir <- "~/Desktop/bachelor/onde_bachelor/experiment_folder/data"
 
-file_filtered
+# List all CSV files in the directory, excluding those with the "group" ratings
+file_list <- list.files(data_dir, pattern = "*.csv", full.names = TRUE) %>%
+  keep(~ !str_detect(basename(.), "group"))
+
+# Process all files and combine them into a single data frame
+all_data <- file_list %>%
+  map_df(~ tryCatch(process_file(.), error = function(e) {
+    message("Error processing file: ", .)
+    NULL # Skip file on error
+  }))
+
+# Ensure the folder "data_combined_nr" exists
+output_dir_no_ratings <- "~/Desktop/bachelor/onde_bachelor/data_processing/data_combined_no_ratings"
+if (!dir.exists(output_dir_no_ratings)) {
+  dir.create(output_dir_no_ratings, recursive = TRUE)  # Create the folder if it doesn't exist
+}
+
+# Save the combined data into the new folder
+write.csv(all_data, file = file.path(output_dir_no_ratings, "processed_data_no_ratings.csv"), row.names = FALSE)
+```
+
+```{r}
+# Define a function to process files in the "group" category
+process_group_file <- function(file_path) {
+  # Read the file
+  file <- read.csv(file_path, header = TRUE)  # Assuming these files have headers
+  
+  # Modify the "participant" column
+  file <- file %>%
+    mutate(participant = case_when(
+      participant == "Blue" ~ 1,
+      participant == "Black" ~ 2,
+      participant == "Pink" ~ 3,
+      TRUE ~ NA  # Handle unexpected values with NA
+    )) %>% 
+    mutate(condition = as.character(condition))
+  
+  return(file)
+}
+
+# Directory containing your files
+data_dir <- "~/Desktop/bachelor/onde_bachelor/experiment_folder/data"
+
+# List all "group" files
+group_file_list <- list.files(data_dir, pattern = "^group.*\\.csv$", full.names = TRUE)
+
+# Process all "group" files
+processed_group_files <- group_file_list %>%
+  map_df(~ tryCatch(process_group_file(.), error = function(e) {
+    message("Error processing group file: ", .)
+    NULL  # Skip file on error
+  }))
+
+# Ensure the folder "data_combined_group" exists
+output_dir_group <- "~/Desktop/bachelor/onde_bachelor/data_processing/data_combined_group"
+if (!dir.exists(output_dir_group)) {
+  dir.create(output_dir_group, recursive = TRUE)  # Create the folder if it doesn't exist
+}
+# Save the combined data into the new folder
+write.csv(all_data, file = file.path(output_dir_group, "processed_data_group.csv"), row.names = FALSE)
 ```
 
 
-pseudocode workflow: 
+```{r}
+getwd()
+```
 
-1. open single file 
-2. insert headers
-3. combine trial_ files
+
 4. add ratings 
 5. type explanation for columns 
