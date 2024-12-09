@@ -1,0 +1,27 @@
+---
+title: "Analysis"
+author: "Anne Christine Vig Jensen"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "~/Desktop/bachelor/onde_bachelor/checking_timing") # set working directory 
+
+pacman::p_load(lmer)
+```
+
+**RQ 1**
+
+Adressing RQ 1: Is overall coordination stability lower in conditions with subgroups compared to conditions with no subgroups? 
+
+Model 1: Predicting the coefficient of variation (cv) based on whether a condition has subgroups or not 
+
+Model syntax: 
+
+$$ \textit{coeffeicient of variation} \sim subgroup + (1 \mid group )$$
+```{r}
+lmer
+```
+

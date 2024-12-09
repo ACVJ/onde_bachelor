@@ -165,5 +165,5 @@ combined_data <- ratings_df %>%
   left_join(no_ratings_df, by = join_by(group_id, condition, trial, participant))
 
 # Save the combined data
-write.csv(combined_data, file = file.path(output_dir, "ratings_trials_combined.csv"), row.names = FALSE)
+write.csv(combined_data, file = file.path(output_dir, "ratings_trials_combined.csv"), row.names = FALSE) 
 ```
