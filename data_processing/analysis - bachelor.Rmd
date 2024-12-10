@@ -22,6 +22,6 @@ Model syntax:
 
 $$ \textit{coeffeicient of variation} \sim subgroup + (1 \mid group )$$
 ```{r}
-lmer
+?lmer::Test()
 ```
 
