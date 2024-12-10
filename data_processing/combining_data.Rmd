@@ -129,8 +129,8 @@ process_group_file <- function(file_path) {
       participant == "Pink" ~ 3,
       TRUE ~ NA  # Handle unexpected values with NA
     )) %>% 
-    mutate(condition = as.character(condition)) #for now, making the condition column of type character
-
+    mutate(condition = as.character(condition)) %>% #for now, making the condition column of type character
+    mutate(condition = str_replace(condition, "Simultaneous", "simultaneous"))
   return(file)
 }
 
@@ -159,11 +159,51 @@ no_ratings_df <- read.csv("processed_data_no_ratings.csv")
 ratings_df  <- read.csv("processed_data_ratings.csv") 
 ```
 
-```{r}
+```{r combining + removing NA's}
 #combining the no ratings df and the ratings df 
 combined_data <- ratings_df %>% 
   left_join(no_ratings_df, by = join_by(group_id, condition, trial, participant))
 
-# Save the combined data
-write.csv(combined_data, file = file.path(output_dir, "ratings_trials_combined.csv"), row.names = FALSE) 
+#checking if na's present 
+na_count <- sum(is.na(combined_data))
+print(paste("Number of NA values in the dataset prior to removal:", na_count))
+
+#dropping na's present  
+combined_data <- combined_data %>% 
+  drop_na()
+
+#checking if na's present 
+na_count <- sum(is.na(combined_data))
+print(paste("Number of NA values in the dataset post removal:", na_count))
 ```
+
+## Adding columns
+```{r subgroup columns}
+combined_data <- combined_data %>% 
+  mutate(subgroup_present = ifelse(condition == "23-1"|condition == "1-23", 1,0)) %>% 
+  mutate(is_a_subgroup_member = ifelse(subgroup_present == 1 & participant == "2"|
+                                   subgroup_present == 1 & participant == "3", 
+                                   1,0))
+```
+
+```{r ITIs}
+# Group by trial and calculate IOI (inter-onset interval)
+combined_data <- combined_data %>% 
+  group_by(trial) %>% 
+  mutate(iti = tap_sec - lag(tap_sec))  # Calculate IOI as the difference from the previous tap
+
+combined_data <- combined_data %>% 
+  group_by(group_id, condition, trial, participant) %>% 
+  filter(iti > 0)
+
+#checking if na's present 
+na_count <- sum(is.na(combined_data))
+print(paste("Number of NA values in the dataset", na_count))
+```
+
+```{r save datafile}
+# Save the combined data
+write.csv(combined_data, file = file.path(output_dir, "ratings_trials_combined.csv"), row.names = FALSE)
+```
+
+
