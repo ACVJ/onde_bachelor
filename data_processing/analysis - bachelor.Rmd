@@ -9,19 +9,42 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir = "~/Desktop/bachelor/onde_bachelor/checking_timing") # set working directory 
 
-pacman::p_load(lmer)
+pacman::p_load(lmerTest)
+set.seed(420)
 ```
 
-**RQ 1**
+#### RQ 1
 
-Adressing RQ 1: Is overall coordination stability lower in conditions with subgroups compared to conditions with no subgroups? 
+RQ 1: *Is overall coordination stability lower in conditions with subgroups compared to conditions with no subgroups?*
 
 Model 1: Predicting the coefficient of variation (cv) based on whether a condition has subgroups or not 
 
 Model syntax: 
 
 $$ \textit{coeffeicient of variation} \sim subgroup + (1 \mid group )$$
+
+```{r RQ1 - overall cv}
+RQ1_overall <- lmerTest::lmer(cv ~ subgroup_present + (1 | group_id), combined_data)
+
+summary(RQ1_overall)
+```
+
+#### RQ 2
+
+RQ 2: *Is agency generally experienced as more shared for members of subgroups compared to individuals in the same condition?* 
++ 
+*If a subgroup member has higher coordination stability, does that member report more shared agency with their partner?*
+
+Model 2: Shared agency is predicted by whether a participant is in a subgroup + the coordination stability with random intercept for each group 
+
+Syntax: 
+$$\textit{shared agency} \sim \textit{subgroup member} + cv + (1 \mid  group)$$
 ```{r}
-?lmer::Test()
+combined_data_RQ2 <- combined_data %>% 
+  filter(subgroup_present == 1)
+
+RQ2 <- lmerTest::lmer(shared ~ is_a_subgroup_member + cv + (1 | group_id), combined_data_RQ2)
+
+summary(RQ2) 
 ```
 

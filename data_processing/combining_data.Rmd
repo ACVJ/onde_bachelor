@@ -41,9 +41,8 @@ pacman::p_load(readbulk, tidyverse)
 # file_filtered$trial <- 0
 ```
 
-
 Combining the trial data - doesn't contain the ratings 
-```{r}
+```{r combining trial data}
 # Define a function to process a single file
 process_trial_file <- function(file_path) {
   # Check if the file is empty
@@ -78,6 +77,9 @@ process_trial_file <- function(file_path) {
   # Filter out the first and last rows
   file_filtered <- file %>%
     slice(-1, -n())
+  
+  # Print the number of rows in the filtered file
+  message("File processed: ", file_path, " | Rows imported: ", nrow(file_filtered))
   
   # Add additional columns
   file_filtered_1 <- file_filtered %>%
@@ -114,8 +116,7 @@ if (!dir.exists(output_dir)) {
 write.csv(all_data_no_ratings, file = file.path(output_dir, "processed_data_no_ratings.csv"), row.names = FALSE)
 ```
 
-Combining the group ratings 
-```{r}
+```{r combining the group ratings }
 # Define a function to process files in the "group" category
 process_group_file <- function(file_path) {
   # Read the file
@@ -151,7 +152,7 @@ processed_group_files <- group_file_list %>%
 write.csv(processed_group_files, file = file.path(output_dir, "processed_data_ratings.csv"), row.names = FALSE)
 ```
 
-```{r}
+```{r saving temporary dfs}
 #temporarily setting wd to find combined files
 setwd("~/Desktop/bachelor/onde_bachelor/data_processing/")
 
@@ -159,8 +160,9 @@ no_ratings_df <- read.csv("processed_data_no_ratings.csv")
 ratings_df  <- read.csv("processed_data_ratings.csv") 
 ```
 
-```{r combining + removing NA's}
+```{r combining + removing NA's + practice}
 #combining the no ratings df and the ratings df 
+#(- practice conditions (trial = 0) is dropped in combining df's bc ratings for practice is not stored - hence cannot be joined with corresponding trial)
 combined_data <- ratings_df %>% 
   left_join(no_ratings_df, by = join_by(group_id, condition, trial, participant))
 
@@ -177,7 +179,6 @@ na_count <- sum(is.na(combined_data))
 print(paste("Number of NA values in the dataset post removal:", na_count))
 ```
 
-## Adding columns
 ```{r subgroup columns}
 combined_data <- combined_data %>% 
   mutate(subgroup_present = ifelse(condition == "23-1"|condition == "1-23", 1,0)) %>% 
@@ -186,7 +187,7 @@ combined_data <- combined_data %>%
                                    1,0))
 ```
 
-```{r ITIs}
+```{r intertap intervals - ITIs}
 # Group by trial and calculate IOI (inter-onset interval)
 combined_data <- combined_data %>% 
   group_by(trial) %>% 
@@ -201,9 +202,73 @@ na_count <- sum(is.na(combined_data))
 print(paste("Number of NA values in the dataset", na_count))
 ```
 
+```{r coefficient of variance - cv}
+combined_data <- combined_data %>% 
+  group_by(trial) %>% 
+  mutate(cv = sd(iti))  # Calculate IOI as the difference from the previous tap
+```
+
+```{r changing class}
+combined_data$group_id <- as.factor(combined_data$group_id)
+combined_data$is_a_subgroup_member <- as.factor(combined_data$is_a_subgroup_member)
+combined_data$condition <- as.factor(combined_data$condition)
+combined_data$subgr2oup_present <- as.factor(combined_data$subgroup_present)
+```
+
+```{r asynchrony}
+#creating async dataset 
+async_data <- combined_data %>%
+  filter(subgroup_present == 1 | condition == "simultaneous")
+
+#viewing 
+head(async_data)
+```
+
+```{r asynchrony - sanity check}
+###### Checking length of datasets - length is odd ???? sanity??? 
+participant_1_df <- async_data %>%
+  filter(participant == 1)
+
+participant_2_df <- async_data %>%
+  filter(participant == 2)
+
+participant_3_df <- async_data %>%
+  filter(participant == 3)
+
+print(length(participant_1_df$tap_sec))
+print(length(participant_2_df$tap_sec))
+print(length(participant_3_df$tap_sec))
+```
+
+```{r asynchrony}
+# create new dataframe only with subgroup members 
+async_data <- combined_data %>%
+  filter(condition %in% c("23-1", "1-23")) %>%
+  filter(participant == "2" | participant == "3")
+
+# rearrange dataframe after tap_sec to get alternation between participants 
+filtered_data <- filtered_data %>% 
+  group_by(trial, condition, group_id) %>% 
+  arrange(tap_sec, .by_group = TRUE) %>% 
+  ungroup()
+
+#calculate absolute time (asynchronies) between participans 2 and 3 
+combined_data1 <- filtered_data %>% 
+  group_by(trial) %>% 
+  mutate(asynchrony = abs(tap_sec - lag(tap_sec)))
+
+#discarding rows reflecting time between subgroup and "loner" (every 2. row)
+filtered_even_rows <- combined_data1 %>%
+  filter(row_number() %% 2 == 0)  # Keep only rows with even row numbers
+
+# View the result
+view(filtered_even_rows)
+```
+
 ```{r save datafile}
 # Save the combined data
-write.csv(combined_data, file = file.path(output_dir, "ratings_trials_combined.csv"), row.names = FALSE)
+write.csv(combined_data, file = file.path(output_dir, "combined_data.csv"), row.names = FALSE)
+write.csv(filtered_even_rows, file = file.path(output_dir, "asynchronies.csv"), row.names = FALSE)
 ```
 
 
