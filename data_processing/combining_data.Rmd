@@ -187,12 +187,14 @@ combined_data <- combined_data %>%
   arrange(tap_sec, .by_group = TRUE) %>% 
   ungroup()
 
-#calculate itis based on the lag- POSSIBLY change to diff function
+#calculate ITIs based on the lag - POSSIBLY change to diff() function
 combined_data <- combined_data %>% 
   group_by(group_id, condition, trial) %>% 
   mutate(iti = tap_sec-lag(tap_sec))
+```
 
-#calculate new_iti- based on summing the itis of group members to get the actual interval betwen tones
+```{r interonset intervals - IOIs}
+#calculate IOIs - based on summing the ITIs of group members to get the actual interval between tones 
 combined_data <- combined_data %>% 
   group_by(trial, condition, group_id) %>% 
   arrange(tap_sec, .by_group = TRUE) %>% 
@@ -202,7 +204,7 @@ combined_data <- combined_data %>%
   ) %>%
   group_by(group_id, condition, trial, tap_cycle) %>%  # Group by the dynamically assigned tap cycle
   mutate(
-    new_iti = case_when(
+    ioi = case_when(
       # For 1-23 and 23-1: Transfer Participant 1's ITI as-is
       condition %in% c("23-1", "1-23") & participant == 1 ~ iti,
       
@@ -229,17 +231,17 @@ combined_data <- combined_data %>%
 combined_data <- combined_data %>%
   group_by(group_id, condition, trial, tap_cycle) %>%
   mutate(
-    new_iti = case_when(
+    ioi = case_when(
       # For conditions 1-23 and 23-1, remove the middle value in each cycle (second tap)
       condition %in% c("23-1", "1-23") & tap_cycle %in% unique(tap_cycle) ~ 
-        ifelse(row_number() == 2, NA, new_iti),
+        ifelse(row_number() == 2, NA, ioi),
       
       # For simultaneous, remove the first two values in each cycle (first two taps)
       condition == "simultaneous" & tap_cycle %in% unique(tap_cycle) ~ 
-        ifelse(row_number() <= 2, NA, new_iti),
+        ifelse(row_number() <= 2, NA, ioi),
       
       # Keep new_iti unchanged for other conditions
-      TRUE ~ new_iti
+      TRUE ~ ioi
     )
   ) %>%
   ungroup()
@@ -253,10 +255,7 @@ combined_data <- combined_data %>%
 # removing unwanted rows - negative itis when switching trials
 combined_data <- combined_data %>% 
   group_by(group_id, condition, trial, participant) %>% 
-  filter(new_iti >=0)
-
-
-
+  filter(ioi >=0)
 
 #checking if na's present 
 na_count <- sum(is.na(combined_data))
@@ -270,30 +269,27 @@ combined_data <- combined_data %>%
 #checking if na's present 
 na_count <- sum(is.na(combined_data))
 print(paste("Number of NA values in the dataset post removal:", na_count))
-
-
 ```
 
 ```{r coefficient of variance - cv}
+# Calculate cv as the sd of the IOI's    
 combined_data <- combined_data %>% 
   group_by(group_id, condition, trial) %>% 
-  mutate(cv = sd(new_iti))  # Calculate cv as the sd of the ITI's   
+  mutate(cv = sd(ioi))
 ```
 
 ```{r changing class}
 combined_data$group_id <- as.factor(combined_data$group_id)
 combined_data$is_a_subgroup_member <- as.factor(combined_data$is_a_subgroup_member)
 combined_data$condition <- as.factor(combined_data$condition)
-combined_data$subgr2oup_present <- as.factor(combined_data$subgroup_present)
+combined_data$subgroup_present <- as.factor(combined_data$subgroup_present)
 ```
 
+Sketched preprossesing of data to investigate asynchrony 
 ```{r asynchrony}
 #creating async dataset 
 #async_data <- combined_data %>%
-  filter(subgroup_present == 1 | condition == "simultaneous")
-
-#viewing 
-#head(async_data)
+#  filter(subgroup_present == 1 | condition == "simultaneous")
 ```
 
 ```{r asynchrony - sanity check}
@@ -338,9 +334,7 @@ combined_data$subgr2oup_present <- as.factor(combined_data$subgroup_present)
 ```
 
 ```{r save datafile}
-# Save the combined data
-write.csv(combined_data, file = file.path("new_iti.csv"), row.names = FALSE)
+# Save the created dataframes 
+write.csv(combined_data, file = file.path("data.csv"), row.names = FALSE)
 write.csv(filtered_even_rows, file = file.path(output_dir, "asynchronies.csv"), row.names = FALSE)
 ```
-
-
