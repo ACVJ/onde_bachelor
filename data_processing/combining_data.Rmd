@@ -137,7 +137,7 @@ write.csv(processed_group_files, file = file.path(output_dir, "processed_data_ra
 
 ```{r saving temporary dfs}
 #temporarily setting wd to find combined files
-setwd("~/Desktop/bachelor/onde_bachelor/data_processing/")
+#setwd("~/Documents/Cognitive_Science/Bachelor/Bachelor2025/data_processing/")
 
 no_ratings_df <- read.csv("processed_data_no_ratings.csv")
 ratings_df  <- read.csv("processed_data_ratings.csv") 
@@ -163,6 +163,7 @@ print(paste("Number of NA values in the dataset post removal:", na_count))
 ```
 
 ```{r subgroup columns}
+# adding subgroup present and is a subgroup meber columns
 combined_data <- combined_data %>% 
   mutate(subgroup_present = ifelse(condition == "23-1"|condition == "1-23", 1,0)) %>% 
   mutate(is_a_subgroup_member = ifelse(subgroup_present == 1 & participant == "2"|
@@ -171,24 +172,112 @@ combined_data <- combined_data %>%
 ```
 
 ```{r intertap intervals - ITIs}
+#### removed old code - not correctly calculated
 # Group by trial and calculate ITI (inter-tapping interval)
-combined_data <- combined_data %>% 
-  group_by(trial) %>% 
-  mutate(iti = tap_sec - lag(tap_sec))  # Calculate ITI as the difference from the previous tap
+#combined_data <- combined_data %>% 
+ # group_by(trial) %>% 
+ # mutate(iti = tap_sec-lag(tap_sec))  # Calculate ITI as the difference from the previous tap - this code calculates its as the difference internal in each participant!
 
+
+#### Proper code according to discussion with Anna
+
+# rearrange dataframe after tap_sec to get alternation between participants  - and the actual order of occuring keypresses
+combined_data <- combined_data %>% 
+  group_by(trial, condition, group_id) %>% 
+  arrange(tap_sec, .by_group = TRUE) %>% 
+  ungroup()
+
+#calculate itis based on the lag- POSSIBLY change to diff function
+combined_data <- combined_data %>% 
+  group_by(group_id, condition, trial) %>% 
+  mutate(iti = tap_sec-lag(tap_sec))
+
+#calculate new_iti- based on summing the itis of group members to get the actual interval betwen tones
+combined_data <- combined_data %>% 
+  group_by(trial, condition, group_id) %>% 
+  arrange(tap_sec, .by_group = TRUE) %>% 
+  mutate(
+    # Assign a unique cycle ID that increments every three taps
+    tap_cycle = ceiling(row_number() / 3)
+  ) %>%
+  group_by(group_id, condition, trial, tap_cycle) %>%  # Group by the dynamically assigned tap cycle
+  mutate(
+    new_iti = case_when(
+      # For 1-23 and 23-1: Transfer Participant 1's ITI as-is
+      condition %in% c("23-1", "1-23") & participant == 1 ~ iti,
+      
+      # For 1-23 and 23-1: Sum ITIs for Participants 2 and 3 only on the last tap of the cycle
+      condition %in% c("23-1", "1-23") & participant %in% c(2, 3) & tap_cycle == max(tap_cycle) ~ 
+        sum(iti[participant %in% c(2, 3)], na.rm = TRUE),
+      
+      # For 1-23 and 23-1: Set ITIs of Participants 2 and 3 to 0 outside the last tap of the cycle
+      condition %in% c("23-1", "1-23") & participant %in% c(2, 3) & tap_cycle != max(tap_cycle) ~ 0,
+      
+      # For simultaneous: Sum ITIs of all three participants only on the last tap of the cycle
+      condition == "simultaneous" & tap_cycle == max(tap_cycle) ~ sum(iti, na.rm = TRUE),
+      
+      # For simultaneous: Set ITIs of all participants to 0 outside the last tap of the cycle
+      condition == "simultaneous" & tap_cycle != max(tap_cycle) ~ 0,
+      
+      # Retain original ITI for other conditions
+      TRUE ~ iti
+    )
+  ) %>%
+  ungroup()
+
+#remove the repeated values - so there is only one iti in new_iti for each tone
+combined_data <- combined_data %>%
+  group_by(group_id, condition, trial, tap_cycle) %>%
+  mutate(
+    new_iti = case_when(
+      # For conditions 1-23 and 23-1, remove the middle value in each cycle (second tap)
+      condition %in% c("23-1", "1-23") & tap_cycle %in% unique(tap_cycle) ~ 
+        ifelse(row_number() == 2, NA, new_iti),
+      
+      # For simultaneous, remove the first two values in each cycle (first two taps)
+      condition == "simultaneous" & tap_cycle %in% unique(tap_cycle) ~ 
+        ifelse(row_number() <= 2, NA, new_iti),
+      
+      # Keep new_iti unchanged for other conditions
+      TRUE ~ new_iti
+    )
+  ) %>%
+  ungroup()
+
+# ordering the data
+combined_data <- combined_data %>% 
+  group_by(trial, condition, group_id) %>% 
+  arrange(tap_sec, .by_group = TRUE) %>% 
+  ungroup()
+
+# removing unwanted rows - negative itis when switching trials
 combined_data <- combined_data %>% 
   group_by(group_id, condition, trial, participant) %>% 
-  filter(iti > 0)
+  filter(new_iti >=0)
+
+
+
 
 #checking if na's present 
 na_count <- sum(is.na(combined_data))
 print(paste("Number of NA values in the dataset", na_count))
+
+
+#dropping na's present  
+combined_data <- combined_data %>% 
+  drop_na()
+
+#checking if na's present 
+na_count <- sum(is.na(combined_data))
+print(paste("Number of NA values in the dataset post removal:", na_count))
+
+
 ```
 
 ```{r coefficient of variance - cv}
 combined_data <- combined_data %>% 
-  group_by(trial) %>% 
-  mutate(cv = sd(iti))  # Calculate cv as the sd of the ITI's   
+  group_by(group_id, condition, trial) %>% 
+  mutate(cv = sd(new_iti))  # Calculate cv as the sd of the ITI's   
 ```
 
 ```{r changing class}
@@ -200,57 +289,57 @@ combined_data$subgr2oup_present <- as.factor(combined_data$subgroup_present)
 
 ```{r asynchrony}
 #creating async dataset 
-async_data <- combined_data %>%
+#async_data <- combined_data %>%
   filter(subgroup_present == 1 | condition == "simultaneous")
 
 #viewing 
-head(async_data)
+#head(async_data)
 ```
 
 ```{r asynchrony - sanity check}
 ###### Checking length of datasets - length is odd ???? sanity??? 
-participant_1_df <- async_data %>%
-  filter(participant == 1)
+#participant_1_df <- async_data %>%
+ # filter(participant == 1)
 
-participant_2_df <- async_data %>%
-  filter(participant == 2)
+#participant_2_df <- async_data %>%
+#  filter(participant == 2)
 
-participant_3_df <- async_data %>%
-  filter(participant == 3)
+#participant_3_df <- async_data %>%
+#  filter(participant == 3)
 
-print(length(participant_1_df$tap_sec))
-print(length(participant_2_df$tap_sec))
-print(length(participant_3_df$tap_sec))
+#print(length(participant_1_df$tap_sec))
+#print(length(participant_2_df$tap_sec))
+#print(length(participant_3_df$tap_sec))
 ```
 
 ```{r asynchrony}
 # create new dataframe only with subgroup members 
-async_data <- combined_data %>%
-  filter(condition %in% c("23-1", "1-23")) %>%
-  filter(participant == "2" | participant == "3")
+#async_data <- combined_data %>%
+#  filter(condition %in% c("23-1", "1-23")) %>%
+#  filter(participant == "2" | participant == "3")
 
 # rearrange dataframe after tap_sec to get alternation between participants 
-filtered_data <- filtered_data %>% 
-  group_by(trial, condition, group_id) %>% 
-  arrange(tap_sec, .by_group = TRUE) %>% 
-  ungroup()
+#filtered_data <- filtered_data %>% 
+#  group_by(trial, condition, group_id) %>% 
+#  arrange(tap_sec, .by_group = TRUE) %>% 
+#  ungroup()
 
 #calculate absolute time (asynchronies) between participans 2 and 3 
-combined_data1 <- filtered_data %>% 
-  group_by(trial) %>% 
-  mutate(asynchrony = abs(tap_sec - lag(tap_sec)))
+#combined_data1 <- filtered_data %>% 
+#  group_by(trial) %>% 
+#  mutate(asynchrony = abs(tap_sec - lag(tap_sec)))
 
 #discarding rows reflecting time between subgroup and "loner" (every 2. row)
-filtered_even_rows <- combined_data1 %>%
-  filter(row_number() %% 2 == 0)  # Keep only rows with even row numbers
+#filtered_even_rows <- combined_data1 %>%
+#  filter(row_number() %% 2 == 0)  # Keep only rows with even row numbers
 
 # View the result
-view(filtered_even_rows)
+#view(filtered_even_rows)
 ```
 
 ```{r save datafile}
 # Save the combined data
-write.csv(combined_data, file = file.path(output_dir, "combined_data.csv"), row.names = FALSE)
+write.csv(combined_data, file = file.path("new_iti.csv"), row.names = FALSE)
 write.csv(filtered_even_rows, file = file.path(output_dir, "asynchronies.csv"), row.names = FALSE)
 ```
 

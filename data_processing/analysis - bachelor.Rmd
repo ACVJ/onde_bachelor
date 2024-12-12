@@ -46,7 +46,9 @@ combined_data_RQ2 <- combined_data %>%
   filter(subgroup_present == 1)
 
 RQ2 <- lmerTest::lmer(shared ~ is_a_subgroup_member + cv + (1 | group_id), combined_data_RQ2)
+R32 <- lmerTest::lmer(control ~ is_a_subgroup_member + cv + (1 | group_id), combined_data_RQ2)
 
+summary(RQ2)
 anova(RQ2) # converts model into type III anova - is there a difference between the means of each variable rather than is there a difference between each intercept 
 ```
 
