@@ -7,11 +7,16 @@ output: html_document
  
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = "~/Desktop/bachelor/onde_bachelor/checking_timing") # set working directory 
+knitr::opts_knit$set(root.dir = "~/Desktop/bachelor/onde_bachelor/data_processing") # set working directory 
   
 pacman::p_load(lmerTest)
 set.seed(420)
 ```
+
+```{r}
+data <- read.csv("data.csv")
+```
+
  
 #### RQ 1
 
@@ -24,11 +29,10 @@ Model syntax:
 $$ \textit{coeffeicient of variation} \sim subgroup + (1 \mid group )$$
 
 ```{r RQ1 - overall cv}
-RQ1_overall <- lmerTest::lmer(cv ~ subgroup_present + (1 | group_id), combined_data)
+RQ1_overall <- lmerTest::lmer(cv ~ subgroup_present + (1 | group_id), data)
 
 summary(RQ1_overall)
 anova(RQ1_overall) 
-head(combined_data)
 ```
 
 #### RQ 2
