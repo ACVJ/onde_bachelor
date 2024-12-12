@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir = "~/Desktop/bachelor/onde_bachelor/checking_timing") # set working directory 
- 
+  
 pacman::p_load(lmerTest)
 set.seed(420)
 ```
@@ -27,6 +27,7 @@ $$ \textit{coeffeicient of variation} \sim subgroup + (1 \mid group )$$
 RQ1_overall <- lmerTest::lmer(cv ~ subgroup_present + (1 | group_id), combined_data)
 
 summary(RQ1_overall)
+anova(RQ1_overall) 
 head(combined_data)
 ```
 
@@ -46,6 +47,6 @@ combined_data_RQ2 <- combined_data %>%
 
 RQ2 <- lmerTest::lmer(shared ~ is_a_subgroup_member + cv + (1 | group_id), combined_data_RQ2)
 
-summary(RQ2) 
+anova(RQ2) # converts model into type III anova - is there a difference between the means of each variable rather than is there a difference between each intercept 
 ```
 

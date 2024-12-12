@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE) #code + output is displayed
 knitr::opts_knit$set(root.dir = "~/Desktop/bachelor/onde_bachelor/experiment_folder/data") # set working directory 
 
 # #read packages
-pacman::p_load(readbulk, tidyverse)
+pacman::p_load(tidyverse)
 ```
 
 Combining the trial data - doesn't contain the ratings 
