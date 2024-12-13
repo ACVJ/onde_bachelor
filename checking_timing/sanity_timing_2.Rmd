@@ -76,6 +76,12 @@ print(iois)
 
 mean(iois)
 sd(iois)
+
+df_ioi <- as_tibble(iois)
+
+ggplot(df_ioi, aes(x=iois))+
+  geom_histogram()+
+  geom_density(alpha=.2, fill="#FF6666") 
 ```
 
 
