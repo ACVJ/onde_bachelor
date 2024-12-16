@@ -18,10 +18,16 @@ Furthermore, we:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE) #code + output is displayed 
-knitr::opts_knit$set(root.dir = "~/Desktop/bachelor/onde_bachelor/experiment_folder/data") # set working directory 
+knitr::opts_knit$set(root.dir = "~/Desktop/bachelor/onde_bachelor/experiment_folder/data_processing") # set working directory 
 
 # #read packages
 pacman::p_load(tidyverse)
+```
+
+```{r}
+demografi <- c(23,23,24,62,60,23)
+mean(demografi)
+sd(demografi)
 ```
 
 Combining the trial data - doesn't contain the ratings 
@@ -336,5 +342,5 @@ Sketched preprossesing of data to investigate asynchrony
 ```{r save datafile}
 # Save the created dataframes 
 write.csv(combined_data, file = file.path("data.csv"), row.names = FALSE)
-write.csv(filtered_even_rows, file = file.path(output_dir, "asynchronies.csv"), row.names = FALSE)
+#write.csv(filtered_even_rows, file = file.path(output_dir, "asynchronies.csv"), row.names = FALSE)
 ```
