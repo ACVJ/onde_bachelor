@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r packages}
-pacman::p_load(tuneR, seewave, tidyverse)
+pacman::p_load(tuneR, seewave, tidyverse, devtools)
 ```
 
 ```{r metronome_timing}
@@ -79,9 +79,19 @@ sd(iois)
 
 df_ioi <- as_tibble(iois)
 
-ggplot(df_ioi, aes(x=iois))+
-  geom_histogram()+
-  geom_density(alpha=.2, fill="#FF6666") 
+metronome_plot <- ggplot(df_ioi, aes(x=iois))+
+  geom_histogram(binwidth = 0.0001, colour = "black", fill = "white") +
+  ggtitle("Distribution of the IOIs from metronome timing test") +
+  xlim(0.663,0.67)+
+  theme_minimal() +
+  geom_vline(aes(xintercept=mean(iois)),
+            color="blue", linetype="dashed", linewidth=1)
+
+metronome_plot
+
+ggsave(filename = "metronome_plot.jpg")
+
+?geom_histogram
 ```
 
 
@@ -165,22 +175,62 @@ bela_data <- bela_data %>%
 
 
 selected_iois <- wav_iois[32:55]
+selected_onsets <- onsets[33:56] 
+adjusted_onsets <- selected_onsets - selected_onsets[1] + bela_data$tap_sec[1]
 
 # View the result
 print(bela_data)
 
 
 merged_data <- bela_data %>%
-  mutate(wave_iois = selected_iois)
+  mutate(wave_iois = selected_iois) %>% 
+  mutate(wave_onsets = adjusted_onsets)
 
 
 timing_difference = merged_data$iti-merged_data$wave_iois
-
+delay = merged_data$wave_onsets-merged_data$tap_sec
 
 merged_data <- merged_data %>%
-  mutate(diff_iti_ioi = timing_difference)
+  mutate(diff_iti_ioi = timing_difference) %>%
+  mutate(delay = delay)
 
+
+mean(delay[2:length(delay)])
+sd(delay[2:length(delay)])
 
 mean(timing_difference[2:length(timing_difference)])
 sd(timing_difference[2:length(timing_difference)])
+
+
+long_data <- merged_data %>% 
+  pivot_longer(cols = c(tap_sec, wave_onsets))
+
+?pivot_longer
+
+long_data %>% 
+  mutate(name = fct_relevel(name, c("iti", "wave_iois"))) %>%
+  ggplot(aes(x = value, y = name)) +
+  geom_point() +
+  ggthemes::theme_par() +
+  #xlim(5,10) +
+  labs(x = 'Time', y = "timing_source") +
+  theme_minimal() +
+  ggtitle("Comparing timing sources")
+
+
+ggplot(merged_data, aes(x=diff_iti_ioi))+
+  geom_density(binwidth = 0.00001, colour = "black", fill = "white") +
+  ggtitle("Difference between IOIs estimated by differet timing sources") +
+  theme_minimal() +
+  geom_vline(aes(xintercept=mean(merged_data$timing_difference)),
+            color="blue", linetype="dashed", linewidth=1)
 ```
+
+```{r}
+library(emo)
+install.packages("ggthemes")
+devtools::install_github("hadley/emo")
+
+
+```
+
