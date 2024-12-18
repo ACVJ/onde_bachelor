@@ -84,6 +84,7 @@ metronome_plot <- ggplot(df_ioi, aes(x=iois))+
   ggtitle("Distribution of the IOIs from metronome timing test") +
   xlim(0.663,0.67)+
   theme_minimal() +
+  xlab("time in seconds")+
   geom_vline(aes(xintercept=mean(iois)),
             color="blue", linetype="dashed", linewidth=1)
 
