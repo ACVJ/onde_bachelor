@@ -37,7 +37,8 @@ cropped_sound <- sound[start_sample:end_sample]
 
 ```{r}
 # Onset detection (manual tuning required)
-onset_times <- timer(cropped_sound, threshold = 93, dmin = 0.00000001)  # Adjust dmin to a more reasonable value
+onset_times <- timer(cropped_sound, threshold = 93, dmin = 0.00000001, main = "Onset detection for metronome without cooldown, threshhold 93")  # Adjust dmin to a more reasonable value¨
+
 
 # Calculate IOIs
 iois <- diff(onset_times$s.start)
