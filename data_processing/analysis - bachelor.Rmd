@@ -30,15 +30,29 @@ Model syntax:
 $$ \textit{coeffeicient of variation} \sim subgroup + (1 \mid group )$$
 
 ```{r RQ1 - overall cv}
+
+data_new <- data %>% 
+  filter(condition != "231" & condition != "312") 
+
+RQ1_overall_new <- lmerTest::lmer(cv ~ subgroup_present + (1 | group_id), data_new)
+
 RQ1_overall <- lmerTest::lmer(cv ~ subgroup_present + (1 | group_id), data)
 
+summary(RQ1_overall_new)
+print("old")
 summary(RQ1_overall)
 print("anova")
 anova(RQ1_overall) 
 print("r2")
 r2_nakagawa(RQ1_overall)
 ```
+
+
+
 ```{r}
+
+
+
 combined_data %>% 
   ggplot(aes(x = subgroup_present, y = cv)) +
   geom_violin(fill = "skyblue") +
