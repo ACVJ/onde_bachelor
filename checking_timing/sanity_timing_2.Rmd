@@ -10,8 +10,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r packages}
-pacman::p_load(tuneR, seewave, tidyverse, devtools)
+pacman::p_load(tuneR, seewave, tidyverse, devtools, rstudioapi)
 ```
+
+```{r}
+packageVersion("seewave")
+```
+
 
 ```{r metronome_timing}
 # Load audio file with metronome beeps 
