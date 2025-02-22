@@ -9,11 +9,12 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir = "~/Desktop/bachelor/onde_bachelor/data_processing") # set working directory 
   
-pacman::p_load(lmerTest)
+pacman::p_load(lmerTest, tidyverse, performance, effects)
 set.seed(420)
 ```
 
 ```{r}
+setwd("~/Cognitive_Science/Bachelor/Bachelor2025/data_processing")
 data <- read.csv("data.csv")
 ```
 
@@ -29,11 +30,78 @@ Model syntax:
 $$ \textit{coeffeicient of variation} \sim subgroup + (1 \mid group )$$
 
 ```{r RQ1 - overall cv}
+
+data_new <- data %>% 
+  filter(condition != "231" & condition != "312") 
+
+RQ1_overall_new <- lmerTest::lmer(cv ~ subgroup_present + (1 | group_id), data_new)
+
 RQ1_overall <- lmerTest::lmer(cv ~ subgroup_present + (1 | group_id), data)
 
+summary(RQ1_overall_new)
+print("old")
 summary(RQ1_overall)
+print("anova")
 anova(RQ1_overall) 
+print("r2")
+r2_nakagawa(RQ1_overall)
 ```
+
+
+
+```{r}
+
+
+
+combined_data %>% 
+  ggplot(aes(x = subgroup_present, y = cv)) +
+  geom_violin(fill = "skyblue") +
+  #geom_errorbar(aes(ymin = cv - error, ymax = cv + error), width = 0.2) +
+  labs(x = "Subgroup present", y = "CV Value", title = "Coefficient of variation by condition") +
+  theme_minimal()
+
+ggsave("~/Cognitive_Science/Bachelor/Bachelor2025/data_processing/RQ1_plot.jpg")
+
+?geom_bar
+```
+
+
+```{r}
+RQ1.Fixed<-effect(c("subgroup_present"), RQ1_overall,
+                           xlevels=list(subgroup_present=seq(0,1,1)))
+
+# You have to convert the output to a dataframe
+RQ1.Fixed<-as.data.frame(RQ1.Fixed)
+
+y_min <- mean(combined_data$cv)-sd(combined_data$cv)*2
+y_max <- mean(combined_data$cv)+sd(combined_data$cv)*2
+#y_min <- mean(combined_data$shared)-sd(combined_data$shared)*2
+#y_max <- mean(combined_data$shared)+sd(combined_data$shared)*2
+
+
+
+RQ1.Fixed.Plot <-ggplot(data = RQ1.Fixed, aes(x = subgroup_present, y =fit))+
+  coord_cartesian(xlim=c(0, 1),ylim = c(y_min, y_max))+ 
+  geom_line(size=1)+
+  geom_ribbon(aes(ymin=fit-se, ymax=fit+se),alpha=.2)+
+  geom_point()+
+  xlab("Subgroup_present")+
+  ylab("CV")+
+  #scale_color_manual(values=c("blue", "red"))+
+  #scale_fill_manual(values=c("blue", "red"))+
+  theme_bw()+
+  theme(text=element_text(face="bold", size=12),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.border = element_rect(fill = NA, colour = "NA"),
+        axis.line = element_line(size = 1, colour = "grey80"),
+        legend.title=element_blank(),
+        legend.position = c(.2, .92))
+RQ1.Fixed.Plot
+
+```
+
+
 
 #### RQ 2
 
@@ -46,13 +114,75 @@ Model 2: Shared agency is predicted by whether a participant is in a subgroup + 
 Syntax: 
 $$\textit{shared agency} \sim \textit{subgroup member} + cv + (1 \mid  group)$$
 ```{r}
+combined_data$sub <- factor(combined_data$is_a_subgroup_member,
+                        levels = c(0,1),
+                        labels = c("Loner", "Subgroup"))
+
 combined_data_RQ2 <- combined_data %>% 
   filter(subgroup_present == 1)
 
-RQ2 <- lmerTest::lmer(shared ~ is_a_subgroup_member + cv + (1 | group_id), combined_data_RQ2)
+
+RQ2 <- lmerTest::lmer(shared ~ sub + cv + (1 | group_id), combined_data_RQ2)
 R32 <- lmerTest::lmer(control ~ is_a_subgroup_member + cv + (1 | group_id), combined_data_RQ2)
 
 summary(RQ2)
 anova(RQ2) # converts model into type III anova - is there a difference between the means of each variable rather than is there a difference between each intercept 
+
+
+summary(RQ2)
+print("anova")
+anova(RQ2) 
+print("r2")
+r2_nakagawa(RQ2)
+```
+```{r}
+ranef(RQ2)
+r2_nakagawa(RQ2)
+```
+
+
+
+```{r}
+pacman::p_load(effects)
+
+#Model.6<-lmer(HappyPercent ~Social*TimeStep
+#                   +(1+Social*TimeStep|Subject),  
+#                   data=HappyData, REML=FALSE)
+#summary(Model.6, correlations=FALSE)
+
+#ranef(Model.6)
+
+Final.Fixed<-effect(c("sub*cv"), RQ2,
+                           xlevels=list(cv=seq(0,1,0.1)))
+
+# You have to convert the output to a dataframe
+Final.Fixed<-as.data.frame(Final.Fixed)
+
+x_min <- mean(combined_data$cv)-sd(combined_data$cv)*2
+x_max <- mean(combined_data$cv)+sd(combined_data$cv)*2
+y_min <- mean(combined_data$shared)-sd(combined_data$shared)*2
+y_max <- mean(combined_data$shared)+sd(combined_data$shared)*2
+
+Final.Fixed.Plot <-ggplot(data = Final.Fixed, aes(x = cv, y =fit, group=sub))+
+  coord_cartesian(xlim=c(x_min, x_max),ylim = c(y_min, y_max))+ 
+  geom_line(aes(color=sub), size=1)+
+  geom_ribbon(aes(ymin=fit-se, ymax=fit+se,fill=sub),alpha=.2)+
+  xlab("CV")+
+  ylab("Shared\nAgency")+
+  scale_color_manual(values=c("blue", "red"))+
+  scale_fill_manual(values=c("blue", "red"))+
+  theme_bw()+
+  theme(text=element_text(face="bold", size=12),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.border = element_rect(fill = NA, colour = "NA"),
+        axis.line = element_line(size = 1, colour = "grey80"),
+        legend.title=element_blank(),
+        legend.position = c(.2, .92))
+Final.Fixed.Plot
+
+setwd("~/Cognitive_Science/Bachelor/Bachelor2025/data_processing")
+
+ggsave("~/Cognitive_Science/Bachelor/Bachelor2025/data_processing/RQ2_plot_ver2.jpg")
 ```
 
